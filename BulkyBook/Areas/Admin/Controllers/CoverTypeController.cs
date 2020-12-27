@@ -1,6 +1,8 @@
 ﻿using BulkyBook.DataAccess.Data;
 using BulkyBook.DataAccess.Repository.IRepository;
 using BulkyBook.Models;
+using BulkyBook.Utility;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -35,7 +37,9 @@ namespace BulkyBook.Areas.Admin.Controllers
             else
             {
                 //update
-                coverType = _unitofwork.CoverType.Get(id.GetValueOrDefault());
+                var param = new DynamicParameters();
+                param.Add("@Id", id);
+                coverType = _unitofwork.SP_Call.OneRecord<CoverType>(SD.Proc_CoverType_Get, param);
                 if (coverType == null)
                 {
                     return NotFound();
@@ -51,13 +55,16 @@ namespace BulkyBook.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
+                var param = new DynamicParameters();
+                param.Add("@Name", coverType.Name);
                 if (coverType.Id == 0)
                 {
-                    _unitofwork.CoverType.Add(coverType);
+                    _unitofwork.SP_Call.Execute(SD.Proc_CoverType_Create, param);
                 }
                 else
                 {
-                    _unitofwork.CoverType.Update(coverType);
+                    param.Add("@Id", coverType.Id);
+                    _unitofwork.SP_Call.Execute(SD.Proc_CoverType_Update, param);
                 }
 
                 _unitofwork.Save();
@@ -71,22 +78,24 @@ namespace BulkyBook.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var allCoverType = _unitofwork.CoverType.GetAll();
+            var allCoverType = _unitofwork.SP_Call.List<CoverType>(SD.Proc_CoverType_GetAll, null);
             return Json(new { data = allCoverType });
         }
 
         [HttpDelete]
         public IActionResult Delete(int Id)
         {
-            var obj = _unitofwork.CoverType.Get(Id);
+            var param = new DynamicParameters();
+            param.Add("@Id", Id);
+            var obj = _unitofwork.SP_Call.OneRecord<CoverType>(SD.Proc_CoverType_Get, param);
             if (obj == null)
             {
                 return Json(new { success = false, message = "Error while deleting" });
-                
             }
-            else
-                _unitofwork.CoverType.Remove(obj);
+
+            _unitofwork.SP_Call.Execute(SD.Proc_CoverType_Delete, param);
             _unitofwork.Save();
+
             return Json(new { success = true, message = "Deleted Successfully" });
 
         }

@@ -41,7 +41,7 @@ namespace BulkyBook.Areas.Admin.Controllers
                     Value = i.Id.ToString()
                 }),
 
-                CoverTypeList = _unitOfWork.Category.GetAll().Select(i => new SelectListItem
+                CoverTypeList = _unitOfWork.CoverType.GetAll().Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Id.ToString()
